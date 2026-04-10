@@ -896,9 +896,19 @@ exports.createOrder = async (req, res) => {
 
     // 🔥 WHATSAPP MESSAGE
     await sendWhatsApp(
-      phone,
-      `✅ *Order Confirmed!*\n\n${orderSummary}\n💰 Total: ₹${totalAmount}`
-    );
+  phone,
+  `🍽️ *Order Confirmed!*
+
+🧾 Order ID: ${order.order_number}
+
+📦 *Items:*
+${orderSummary}
+
+💰 *Total:* ₹${totalAmount}
+
+⏳ Your order is being prepared...
+Thank you for ordering 🙌`
+);
 
     res.json({
       success: true,
