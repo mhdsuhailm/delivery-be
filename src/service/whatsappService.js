@@ -134,6 +134,60 @@ const sendCTA = async (to, text, buttonText, urlLink) => {
     console.log("CTA Error:", err.response?.data || err.message);
   }
 };
+const sendAddressButtons = async (to, lastAddress = null) => {
+  const buttons = [];
 
-module.exports = { sendWhatsApp,sendButtons,sendMenuButton,sendCTA };
+  if (lastAddress) {
+    buttons.push({
+      type: "reply",
+      reply: {
+        id: "use_last_address",
+        title: "Use Last Address"
+      }
+    });
+  }
+
+  buttons.push(
+    {
+      type: "reply",
+      reply: {
+        id: "share_location",
+        title: "Share Location"
+      }
+    },
+    {
+      type: "reply",
+      reply: {
+        id: "enter_address",
+        title: "Enter Address"
+      }
+    }
+  );
+
+  await axios.post(
+    `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`,
+    {
+      messaging_product: "whatsapp",
+      to,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: {
+          text: lastAddress
+            ? `Use your last address?\n${lastAddress}`
+            : "Please choose how to provide your address:"
+        },
+        action: { buttons }
+      }
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+};
+
+module.exports = { sendWhatsApp,sendButtons,sendMenuButton,sendCTA,sendAddressButtons };
 
