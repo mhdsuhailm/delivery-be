@@ -910,7 +910,7 @@ const menuItem = itemData.rows[0];
     quantity,
     unit_price,
     total_price,
-    created_at
+    order_created_at
   )
   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,Now())`,
   [
