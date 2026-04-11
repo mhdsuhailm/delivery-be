@@ -7,7 +7,7 @@ exports.getMenu = async (req, res) => {
         mi.id,
         mi.name,
         mi.description,
-        
+        ip.id AS portion_id,
          mi.available_in,
   mi.chef_note,
   mi.ingredients,
