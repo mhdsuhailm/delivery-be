@@ -144,28 +144,38 @@ const menuURL = `${baseURL}/menu/takeaway?token=${token}`
       }
 
       if (buttonReply === "delivery") {
-//         await pool.query(
-//     `INSERT INTO sessions (user_phone, branch_id, order_type)
-//      VALUES ($1, $2, $3)`,
-//     [from, branch.id, "delivery"]
-//   );
+
+// await pool.query(
+//   `INSERT INTO sessions (user_id, branch_id, order_type)
+//    VALUES ($1, $2, $3)`,
+//   [user.id, branch.id, "delivery"]
+// );       
+
+// const baseURL = process.env.FRONTEND_URL;
+
+// const menuURL = `${baseURL}/menu/takeaway?token=${token}`;
+
+// await sendCTA(
+//   from,
+//   "You selected Takeaway 🍽️",
+//   "View Menu",
+//   menuURL
+// );
+const token = crypto.randomBytes(16).toString("hex"); // ✅ CREATE TOKEN
+
 await pool.query(
-  `INSERT INTO sessions (user_id, branch_id, order_type)
-   VALUES ($1, $2, $3)`,
-  [user.id, branch.id, "delivery"]
-);       
-// await sendWhatsApp(
-//           from,
-//           "You selected Home Delivery 🚚\nMenu: https://your-link"
-//         );
-// await sendMenuButton(from, "Home Delivery");
+  `INSERT INTO sessions (user_id, branch_id, order_type, token)
+   VALUES ($1, $2, $3, $4)`,
+  [user.id, branch.id, "delivery", token]
+);
+
 const baseURL = process.env.FRONTEND_URL;
 
-const menuURL = `${baseURL}/menu/takeaway?token=${token}`;
+const menuURL = `${baseURL}/menu/delivery?token=${token}`; // ✅ correct route
 
 await sendCTA(
   from,
-  "You selected Takeaway 🍽️",
+  "You selected Home Delivery 🚚",
   "View Menu",
   menuURL
 );

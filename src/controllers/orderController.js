@@ -862,37 +862,70 @@ exports.createOrder = async (req, res) => {
 
       const menuItem = itemData.rows[0];
 
-      const itemTotal = menuItem.price * item.qty;
+      const itemTotal = Number(menuItem.price) * Number(item.qty);
       totalAmount += itemTotal;
 
       orderSummary += `• ${menuItem.name} x${item.qty} = ₹${itemTotal}\n`;
 
-      await pool.query(
-        `INSERT INTO order_items (
-          order_id,
-          menu_item_id,
-          item_name,
-          quantity,
-          unit_price,
-          total_price
-        )
-        VALUES ($1,$2,$3,$4,$5,$6)`,
-        [
-          order.id,
-          item.item_id,
-          menuItem.name,
-          item.qty,
-          menuItem.price,
-          itemTotal
-        ]
-      );
+      // await pool.query(
+      //   `INSERT INTO order_items (
+      //     order_id,
+      //     menu_item_id,
+      //     item_name,
+      //     quantity,
+      //     unit_price,
+      //     total_price
+      //   )
+      //   VALUES ($1,$2,$3,$4,$5,$6)`,
+      //   [
+      //     order.id,
+      //     item.item_id,
+      //     menuItem.name,
+      //     item.qty,
+      //     menuItem.price,
+      //     itemTotal
+      //   ]
+      // );
+    await pool.query(
+  `INSERT INTO order_items (
+    order_id,
+    menu_item_id,
+    item_name,
+    portion_type,
+    portion_price,
+    quantity,
+    unit_price,
+    total_price
+  )
+  VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+  [
+    order.id,
+    item.item_id,
+    menuItem.name,
+    "regular",                 // 👈 for now static
+    menuItem.price,            // 👈 portion price
+    item.qty,
+    menuItem.price,            // 👈 unit price
+    itemTotal
+  ]
+);
     }
 
     // 🔥 UPDATE TOTAL
+    // await pool.query(
+    //   `UPDATE orders SET total_amount = $1 WHERE id = $2`,
+    //   [totalAmount, order.id]
+    // );
     await pool.query(
-      `UPDATE orders SET total_amount = $1 WHERE id = $2`,
-      [totalAmount, order.id]
-    );
+  `UPDATE orders 
+   SET 
+     subtotal = $1,
+     total_amount = $1,
+     status = 'confirmed',
+     confirmed_at = NOW()
+   WHERE id = $2`,
+  [totalAmount, order.id]
+);
 
     // 🔥 WHATSAPP MESSAGE
     await sendWhatsApp(
