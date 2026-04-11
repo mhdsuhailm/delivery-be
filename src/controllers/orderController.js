@@ -850,17 +850,31 @@ exports.createOrder = async (req, res) => {
 
     // 🔥 INSERT ITEMS
     for (let item of items) {
+      // const itemData = await pool.query(
+      //   `SELECT mi.name, ip.price
+      //    FROM item_portions ip
+      //    JOIN menu_items mi ON mi.id = ip.menu_item_id
+      //    WHERE ip.id = $1`,
+      //   [item.portion_id]
+      // );
+
+      // if (itemData.rows.length === 0) continue;
+
+      // const menuItem = itemData.rows[0];
       const itemData = await pool.query(
-        `SELECT mi.name, ip.price
-         FROM item_portions ip
-         JOIN menu_items mi ON mi.id = ip.menu_item_id
-         WHERE ip.id = $1`,
-        [item.portion_id]
-      );
+  `SELECT mi.id as menu_item_id, mi.name, ip.price
+   FROM item_portions ip
+   JOIN menu_items mi ON mi.id = ip.menu_item_id
+   WHERE ip.id = $1`,
+  [item.portion_id]
+);
 
-      if (itemData.rows.length === 0) continue;
+if (itemData.rows.length === 0) {
+  console.log("❌ Invalid portion_id:", item.portion_id);
+  continue;
+}
 
-      const menuItem = itemData.rows[0];
+const menuItem = itemData.rows[0];
 
       const itemTotal = Number(menuItem.price) * Number(item.qty);
       totalAmount += itemTotal;
@@ -900,7 +914,8 @@ exports.createOrder = async (req, res) => {
   VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
   [
     order.id,
-    item.item_id,
+    // item.item_id,
+     menuItem.menu_item_id,
     menuItem.name,
     "regular",                 // 👈 for now static
     menuItem.price,            // 👈 portion price
