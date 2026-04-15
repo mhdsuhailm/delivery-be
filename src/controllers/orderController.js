@@ -119,7 +119,7 @@ exports.createOrder = async (req, res) => {
         item_name,
         portion_type,
         portion_price,
-        special_instruction,
+        special_instructions,
         quantity,
         unit_price,
         total_price,
