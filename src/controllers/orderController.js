@@ -133,6 +133,7 @@ exports.createOrder = async (req, res) => {
           menuItem.name,
           "regular", // 👈 for now static
           menuItem.price, // 👈 portion price
+          item.special_instructions,
           item.qty,
           menuItem.price, // 👈 unit price
           itemTotal
