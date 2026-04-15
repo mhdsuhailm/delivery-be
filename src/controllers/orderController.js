@@ -119,12 +119,13 @@ exports.createOrder = async (req, res) => {
         item_name,
         portion_type,
         portion_price,
+        special_instruction,
         quantity,
         unit_price,
         total_price,
         created_at
       )
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,Now())`,
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,Now())`,
         [
           order.id,
           // item.item_id,
