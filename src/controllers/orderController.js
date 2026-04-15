@@ -1,5 +1,7 @@
 const pool = require("../config/db");
 const { sendWhatsApp } = require("../service/whatsappService");
+const razorpay = require("../config/razorpay");
+const { sendCTA } = require("../service/whatsappService");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -18,11 +20,11 @@ exports.createOrder = async (req, res) => {
     // 🔥 GET SESSION + USER
     const sessionResult = await pool.query(
       `SELECT s.*, u.phone_number, u.id as user_id
-       FROM sessions s
-       JOIN users u ON s.user_id = u.id
-       WHERE s.token = $1
-       ORDER BY s.created_at DESC
-       LIMIT 1`,
+      FROM sessions s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.token = $1
+      ORDER BY s.created_at DESC
+      LIMIT 1`,
       [token]
     );
 
@@ -72,19 +74,19 @@ exports.createOrder = async (req, res) => {
 
       // const menuItem = itemData.rows[0];
       const itemData = await pool.query(
-  `SELECT mi.id as menu_item_id, mi.name, ip.price
-   FROM item_portions ip
-   JOIN menu_items mi ON mi.id = ip.menu_item_id
-   WHERE ip.id = $1`,
-  [item.portion_id]
-);
+        `SELECT mi.id as menu_item_id, mi.name, ip.price
+        FROM item_portions ip
+        JOIN menu_items mi ON mi.id = ip.menu_item_id
+        WHERE ip.id = $1`,
+        [item.portion_id]
+      );
 
-if (itemData.rows.length === 0) {
-  console.log("❌ Invalid portion_id:", item.portion_id);
-  continue;
-}
+      if (itemData.rows.length === 0) {
+        console.log("❌ Invalid portion_id:", item.portion_id);
+        continue;
+      }
 
-const menuItem = itemData.rows[0];
+      const menuItem = itemData.rows[0];
 
       const itemTotal = Number(menuItem.price) * Number(item.qty);
       totalAmount += itemTotal;
@@ -110,31 +112,31 @@ const menuItem = itemData.rows[0];
       //     itemTotal
       //   ]
       // );
-    await pool.query(
-  `INSERT INTO order_items (
-    order_id,
-    menu_item_id,
-    item_name,
-    portion_type,
-    portion_price,
-    quantity,
-    unit_price,
-    total_price,
-    created_at
-  )
-  VALUES ($1,$2,$3,$4,$5,$6,$7,$8,Now())`,
-  [
-    order.id,
-    // item.item_id,
-     menuItem.menu_item_id,
-    menuItem.name,
-    "regular",                 // 👈 for now static
-    menuItem.price,            // 👈 portion price
-    item.qty,
-    menuItem.price,            // 👈 unit price
-    itemTotal
-  ]
-);
+      await pool.query(
+        `INSERT INTO order_items (
+        order_id,
+        menu_item_id,
+        item_name,
+        portion_type,
+        portion_price,
+        quantity,
+        unit_price,
+        total_price,
+        created_at
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,Now())`,
+        [
+          order.id,
+          // item.item_id,
+          menuItem.menu_item_id,
+          menuItem.name,
+          "regular", // 👈 for now static
+          menuItem.price, // 👈 portion price
+          item.qty,
+          menuItem.price, // 👈 unit price
+          itemTotal
+        ]
+      );
     }
 
     // 🔥 UPDATE TOTAL
@@ -143,20 +145,20 @@ const menuItem = itemData.rows[0];
     //   [totalAmount, order.id]
     // );
     await pool.query(
-  `UPDATE orders 
-   SET 
-     subtotal = $1,
-     total_amount = $1,
-     status = 'confirmed',
-     confirmed_at = NOW()
-   WHERE id = $2`,
-  [totalAmount, order.id]
-);
+      `UPDATE orders
+        SET
+          subtotal = $1,
+          total_amount = $1,
+          status = 'confirmed',
+          confirmed_at = NOW()
+        WHERE id = $2`,
+      [totalAmount, order.id]
+    );
 
     // 🔥 WHATSAPP MESSAGE
     await sendWhatsApp(
-  phone,
-  `🍽️ *Order Confirmed!*
+      phone,
+      `🍽️ *Order Confirmed!*
 
 🧾 Order ID: ${order.order_number}
 
@@ -167,13 +169,59 @@ ${orderSummary}
 
 ⏳ Your order is being prepared...
 Thank you for ordering 🙌`
-);
+    );
+
+    // 🔥 CREATE PAYMENT LINK
+    // const paymentLink = await razorpay.paymentLink.create({
+    //   amount: totalAmount * 100, // paisa
+    //   currency: "INR",
+    //   description: `Order ${order.order_number}`,
+
+    //   customer: {
+    //     contact: phone,
+    //   },
+
+    //   notify: {
+    //     sms: true,
+    //     email: false,
+    //   },
+
+    //   reminder_enable: true,
+
+    //   notes: {
+    //     order_id: order.id, // 🔥 IMPORTANT
+    //   }
+    // });
+
+    // PAYMENT LINK
+    // await pool.query(
+    //   `UPDATE orders
+    //   SET metadata = jsonb_set(metadata, '{payment_link}', $1)
+    //   WHERE id = $2`,
+    //   [JSON.stringify(paymentLink.short_url), order.id]
+    // );
+
+// 🔥 SEND WHATSAPP BUTTON
+// await sendCTA(
+//   phone,
+//   `🍽️ *Order Confirmed!*
+
+// 🧾 Order ID: ${order.order_number}
+
+// 📦 *Items:*
+// ${orderSummary}
+
+// 💰 *Total:* ₹${totalAmount}
+
+// 👉 Click below to complete payment`,
+//   "Pay Now 💳",
+//   paymentLink.short_url
+// );
 
     res.json({
       success: true,
       order_id: order.id
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

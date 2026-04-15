@@ -246,7 +246,8 @@ const {
   sendWhatsApp,
   sendButtons,
   sendCTA,
-  sendAddressButtons
+  sendAddressButtons,
+  sendImage
 } = require("../service/whatsappService");
 
 const crypto = require("crypto");
@@ -328,7 +329,6 @@ exports.webhookHandler = async (req, res) => {
 
     const branch = branchResult.rows[0];
 
-    // ✅ UPSERT USER
     const phone = message.from;
     const name = value.contacts?.[0]?.profile?.name || "Guest";
 
@@ -343,18 +343,32 @@ exports.webhookHandler = async (req, res) => {
 
     const user = userResult.rows[0];
 
-    // =========================
     // ✅ TEXT HANDLER
-    // =========================
     if (message.type === "text") {
       const userMsg = message.text.body.toLowerCase();
 
       // 🔹 GREETING
+      // if (userMsg === "hi" || userMsg === "hello") {
+      //   await sendButtons(
+      //     from,
+      //     `Welcome to ${branch.name} 👋\n\nPlease choose an option:`
+      //   );
+      //   return;
+      // }
+
       if (userMsg === "hi" || userMsg === "hello") {
+
+        await sendImage(
+          from,
+          "https://your-image-url.com/welcome.jpg",
+          `Welcome to ${branch.name} 👋`
+        );
+
         await sendButtons(
           from,
-          `Welcome to ${branch.name} 👋\n\nPlease choose an option:`
+          "Please choose an option:"
         );
+
         return;
       }
 
@@ -385,9 +399,7 @@ exports.webhookHandler = async (req, res) => {
       return;
     }
 
-    // =========================
     // ✅ LOCATION HANDLER
-    // =========================
     if (message.type === "location") {
       const session = await getSession(user.id);
 
@@ -414,9 +426,7 @@ exports.webhookHandler = async (req, res) => {
       }
     }
 
-    // =========================
     // ✅ BUTTON HANDLER
-    // =========================
     if (message.type === "interactive") {
       const buttonReply = message.interactive.button_reply.id;
 
@@ -454,11 +464,15 @@ exports.webhookHandler = async (req, res) => {
           [user.id, branch.id, "delivery", token, "WAITING_FOR_ADDRESS"]
         );
 
-        if (addressResult.rows.length === 0) {
-          await sendAddressButtons(from);
-        } else {
-          await sendAddressButtons(from, addressResult.rows[0].address);
-        }
+        // if (addressResult.rows.length === 0) {
+        //   await sendAddressButtons(from);
+        // } else {
+        //   await sendAddressButtons(from, addressResult.rows[0].address);
+        // }
+        await sendWhatsApp(
+          from,
+          `📍 Please share your location OR type your address.\n\n👉 Fastest: Tap 📎 → Location → Send\n👉 Or type manually`
+        );
 
         return;
       }
@@ -471,16 +485,16 @@ exports.webhookHandler = async (req, res) => {
       }
 
       // 🔹 SHARE LOCATION
-      if (buttonReply === "share_location") {
-        await sendWhatsApp(from, "Please share your location 📍");
-        return;
-      }
+      // if (buttonReply === "share_location") {
+      //   await sendWhatsApp(from, "Please share your location 📍");
+      //   return;
+      // }
 
-      // 🔹 ENTER ADDRESS
-      if (buttonReply === "enter_address") {
-        await sendWhatsApp(from, "Please type your full address ✍️");
-        return;
-      }
+      // // 🔹 ENTER ADDRESS
+      // if (buttonReply === "enter_address") {
+      //   await sendWhatsApp(from, "Please type your full address ✍️");
+      //   return;
+      // }
     }
 
   } catch (err) {

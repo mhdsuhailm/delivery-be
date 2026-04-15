@@ -8,11 +8,11 @@ exports.getMenu = async (req, res) => {
         mi.name,
         mi.description,
         ip.id AS portion_id,
-         mi.available_in,
-  mi.chef_note,
-  mi.ingredients,
-  mi.rating,
-  mi.is_bestseller,
+        mi.available_in,
+        mi.chef_note,
+        mi.ingredients,
+        mi.rating,
+        mi.is_bestseller,
         mi.image_urls,
         mc.name AS category,
         ip.price
@@ -27,12 +27,12 @@ exports.getMenu = async (req, res) => {
       items: result.rows
     });
 
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Server error" });
-//   }
-}catch (err) {
-  console.error("MENU ERROR:", err);   // 👈 THIS LINE IS KEY
-  res.status(500).json({ error: err.message });
-}
+    //   } catch (err) {
+    //     console.error(err);
+    //     res.status(500).json({ error: "Server error" });
+    //   }
+  } catch (err) {
+    console.error("MENU ERROR:", err); // 👈 THIS LINE IS KEY
+    res.status(500).json({ error: err.message });
+  }
 };
