@@ -360,7 +360,7 @@ exports.webhookHandler = async (req, res) => {
 
         await sendImage(
           from,
-          "https://your-image-url.com/welcome.jpg",
+          "https://thumbs.dreamstime.com/b/table-scene-various-delicious-foods-above-view-white-wood-background-copy-space-pastas-flatbreads-tacos-steak-327218176.jpg",
           `Welcome to ${branch.name} 👋`
         );
 
