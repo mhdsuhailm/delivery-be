@@ -204,7 +204,7 @@ const sendImage = async (to, imageUrl, caption = "") => {
       },
       {
         headers: {
-          Authorization: `Bearer ${WHATSAPP_TOKEN}`,
+          Authorization: `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
           "Content-Type": "application/json"
         }
       }
