@@ -35,23 +35,39 @@ exports.createOrder = async (req, res) => {
     const session = sessionResult.rows[0];
 
     const userId = session.user_id;
-    const phone = session.phone_number; // ✅ FIX
+    const phone = session.phone_number;
+    
+    // 🔥 GET USER DEFAULT ADDRESS
+    const addressResult = await pool.query(
+      `SELECT * FROM delivery_addresses 
+      WHERE user_id = $1 AND is_default = true
+      ORDER BY created_at DESC
+      LIMIT 1`,
+      [userId]
+    );
 
-    // 🔥 CREATE ORDER
+    if (addressResult.rows.length === 0) {
+      return res.status(400).json({ message: "No delivery address found" });
+    }
+
+    const address = addressResult.rows[0];
+    //  CREATE ORDER
     const orderResult = await pool.query(
       `INSERT INTO orders (
         order_number,
         branch_id,
         customer_id,
-        order_type
+        order_type,
+        delivery_address_id
       )
-      VALUES ($1, $2, $3, $4)
+      VALUES ($1, $2, $3, $4, $5)
       RETURNING *`,
       [
         "ORD-" + Date.now(),
         session.branch_id,
-        userId, // ✅ FIX
-        session.order_type
+        userId,
+        session.order_type,
+        address.id
       ]
     );
 
