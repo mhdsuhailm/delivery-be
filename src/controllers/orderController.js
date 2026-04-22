@@ -62,6 +62,7 @@ const orderNumberResult = await pool.query(
   [session.branch_id]
 );
 const displayNumber = `ORD-${String(order.order_number).padStart(3, "0")}`;
+const nextOrderNumber = orderNumberResult.rows[0].next_order_number;
     //  CREATE ORDER
     const orderResult = await pool.query(
       `INSERT INTO orders (
@@ -74,7 +75,7 @@ const displayNumber = `ORD-${String(order.order_number).padStart(3, "0")}`;
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *`,
       [
-        next_order_number,
+        nextOrderNumber,
         session.branch_id,
         userId,
         session.order_type,
