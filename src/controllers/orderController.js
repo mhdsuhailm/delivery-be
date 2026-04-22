@@ -61,7 +61,7 @@ const orderNumberResult = await pool.query(
   `,
   [session.branch_id]
 );
-const displayNumber = `ORD-${String(order.order_number).padStart(3, "0")}`;
+// const displayNumber = `ORD-${String(order.order_number).padStart(3, "0")}`;
 const nextOrderNumber = orderNumberResult.rows[0].next_order_number;
     //  CREATE ORDER
     const orderResult = await pool.query(
