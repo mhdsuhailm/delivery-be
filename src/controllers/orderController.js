@@ -51,6 +51,17 @@ exports.createOrder = async (req, res) => {
     }
 
     const address = addressResult.rows[0];
+
+const orderNumberResult = await pool.query(
+  `
+  SELECT COALESCE(MAX(order_number), 0) + 1 AS next_order_number
+  FROM orders
+  WHERE branch_id = $1
+    AND created_at::date = CURRENT_DATE
+  `,
+  [session.branch_id]
+);
+const displayNumber = `ORD-${String(order.order_number).padStart(3, "0")}`;
     //  CREATE ORDER
     const orderResult = await pool.query(
       `INSERT INTO orders (
@@ -63,7 +74,7 @@ exports.createOrder = async (req, res) => {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *`,
       [
-        "ORD-" + Date.now(),
+        next_order_number,
         session.branch_id,
         userId,
         session.order_type,
